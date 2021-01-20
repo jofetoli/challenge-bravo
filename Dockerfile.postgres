@@ -1,0 +1,4 @@
+FROM postgres:12.3-alpine
+
+COPY migrations/* /docker-entrypoint-initdb.d/
+EXPOSE 5432
