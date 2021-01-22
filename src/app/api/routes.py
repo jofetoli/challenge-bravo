@@ -1,4 +1,4 @@
-# src/routes.py
+# app/api/routes.py
 
 from api.controller.currency.views import index, add_currency, rm_currency, convert
 

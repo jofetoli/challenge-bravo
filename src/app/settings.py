@@ -1,4 +1,4 @@
-# src/settings.py
+# app/settings.py
 import pathlib
 import yaml
 

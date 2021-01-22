@@ -1,4 +1,4 @@
-#bravo\currency_fetcher.py
+#integrations\currency_fetcher.py
 from aiohttp import web
 
 class CurrencyFetcher:
