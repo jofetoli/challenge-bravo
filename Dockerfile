@@ -5,9 +5,12 @@ RUN pip install -r /app/requirements.txt
 
 EXPOSE 8080
 
-COPY src /app/
+COPY src/app/ /app/
+COPY src/integrations/ /app/integrations/
+COPY src/infrastructure/ /app/infrastructure/
+
 COPY config /app/config/
 
 WORKDIR /app
 
-CMD [ "python3", "/app/app/server.py" ]
+CMD [ "python3", "/app/server.py" ]

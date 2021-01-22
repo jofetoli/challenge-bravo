@@ -1,6 +1,6 @@
 # src/views.py
 from aiohttp import web
-import app.infrastructure.db as db
+import infrastructure.db as db
 from datetime import datetime, timedelta
 
 async def index(request):
