@@ -1,4 +1,4 @@
-#bravo/db.py
+#infrastructure/db.py
 import aiopg.sa
 from sqlalchemy import (
     MetaData, Table, Column, ForeignKey,

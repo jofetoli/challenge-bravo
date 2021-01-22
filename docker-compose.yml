@@ -15,10 +15,14 @@ services:
   app:
     build: .
     image: flima/bravo-ch:0.1
-    environment:
-    - PYTHONPATH=/app/app
     ports:
       - 8080:8080
     depends_on:
       - postgres
 
+  cron:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.cron
+    depends_on:
+      - postgres

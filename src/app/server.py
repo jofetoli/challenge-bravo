@@ -2,7 +2,7 @@
 
 from aiohttp import web, ClientSession
 from api.routes import setup_routes
-from settings import config
+from infrastructure.settings import config
 from integrations.currency_fetcher import CurrencyFetcher
 from infrastructure.db import close_pg, init_pg
 

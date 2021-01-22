@@ -2,7 +2,7 @@
 import pathlib
 import yaml
 
-BASE_DIR = pathlib.Path(__file__).parent
+BASE_DIR = pathlib.Path(__file__).parent.parent
 config_path = BASE_DIR / 'config' / 'bravo.yaml'
 
 def get_config(path):
