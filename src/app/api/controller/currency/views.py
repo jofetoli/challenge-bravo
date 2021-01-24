@@ -2,6 +2,8 @@
 from aiohttp import web
 import infrastructure.db as db
 from datetime import datetime, timedelta
+from model.amount import Amount
+
 
 # GET /
 async def index(request):
@@ -64,10 +66,11 @@ async def _fetch_currency(request):
 # GET /convert?from=BTC&to=EUR&amount=123.45
 async def convert(request):
     _from, _to, _amount = await _get_convertion_args_from_request(request)
+    amount = Amount(_amount)
     async with request.app['db'].acquire() as conn:
         currency_from = await _get_currency_by_code(request, conn, _from)
         currency_to = await _get_currency_by_code(request, conn, _to)
-        ret_value = (float(_amount) * currency_from['value']) / currency_to['value']
+        ret_value = (amount.value() * currency_from['value']) / currency_to['value']
         return web.Response(text=str(ret_value))
 
 async def _get_currency_by_code(request, conn, code):
@@ -77,7 +80,7 @@ async def _get_currency_by_code(request, conn, code):
             return currency
     currency = await db.get_currency_by_code(conn, code)
     if currency is None:
-        raise web.HTTPBadRequest(text=code + ' is no registered')
+        raise web.HTTPBadRequest(text=code + ' is not a registered currency')
     currency['last_update'] = datetime.now()
     request.app['cache'][code] = currency
     return currency
