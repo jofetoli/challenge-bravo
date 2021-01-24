@@ -3,12 +3,13 @@ from aiohttp import web
 import infrastructure.db as db
 from datetime import datetime, timedelta
 
+# GET /
 async def index(request):
     async with request.app['db'].acquire() as conn:
         currencies = await db.get_all_currency(conn)
         return web.Response(text=str(currencies))
 
-# POST /currency
+# PUT /currency/:code
 async def add_currency(request):
     async with request.app['db'].acquire() as conn:
         currency = await _get_currency_from_request(conn, request)
@@ -20,7 +21,7 @@ async def add_currency(request):
             currency = await db.update_currency(conn, currency)
         return web.Response(text=str(currency))
 
-# DELETE /currency/:currencyCode
+# DELETE /currency/:code
 async def rm_currency(request):
     async with request.app['db'].acquire() as conn:
         currency = await _get_currency_from_request(conn, request)
@@ -60,6 +61,7 @@ async def _fetch_currency(request):
     currency_rate = await request.app['currency_client'].get_currency_rate_by_code(currency_code)
     return currency_code, currency_rate
 
+# GET /convert?from=BTC&to=EUR&amount=123.45
 async def convert(request):
     _from, _to, _amount = await _get_convertion_args_from_request(request)
     async with request.app['db'].acquire() as conn:
