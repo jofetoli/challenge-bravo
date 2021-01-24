@@ -6,22 +6,13 @@ from integrations.currency_fetcher import CurrencyFetcher
 from infrastructure.db import close_pg, init_pg
 import infrastructure.db as db
 from infrastructure.settings import config
-import logging
-import sys
+from infrastructure.logger import get_logger
 
 import asyncio
 
 cron = {}
 
-logger = logging.getLogger('cron')
-ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.INFO)
-formatter = logging.Formatter('[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
-init_pg
-logger.setLevel(logging.INFO)
-
+logger = get_logger('cron')
 cron['config'] = config
 
 async def updating_currencies(client):
