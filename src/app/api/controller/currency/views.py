@@ -3,39 +3,52 @@ from aiohttp import web
 import infrastructure.db as db
 from datetime import datetime, timedelta
 from model.amount import Amount
+from psycopg2 import OperationalError
 
 
 # GET /
 async def index(request):
-    async with request.app['db'].acquire() as conn:
-        currencies = await db.get_all_currency(conn)
-        return web.Response(text=str(currencies))
+    try:
+        async with request.app['db'].acquire() as conn:
+            currencies = await db.get_all_currency(conn)
+            return web.Response(text=str(currencies))
+    except OperationalError:
+        request.app['logger'].exception('index - error')
+        return web.HTTPServiceUnavailable(text='Something went wrong while fetching the currencies')
 
 # PUT /currency/:code
 async def add_currency(request):
-    async with request.app['db'].acquire() as conn:
-        currency = await _get_currency_from_request(conn, request)
-        if(currency == None):
-            currency_code, currency_rate = await _fetch_currency(request) 
-            currency = await db.insert_currency(conn, currency_code, currency_rate)
-        elif currency['active'] == 0:
-            currency['active'] = 1
-            currency = await db.update_currency(conn, currency)
-        return web.Response(text=str(currency))
+    try:
+        async with request.app['db'].acquire() as conn:
+            currency = await _get_currency_from_request(conn, request)
+            if(currency == None):
+                currency_code, currency_rate = await _fetch_currency(request) 
+                currency = await db.insert_currency(conn, currency_code, currency_rate)
+            elif currency['active'] == 0:
+                currency['active'] = 1
+                currency = await db.update_currency(conn, currency)
+            return web.Response(text=str(currency))
+    except OperationalError:
+        request.app['logger'].exception('add_currency - error')
+        return web.HTTPServiceUnavailable(text='Something went wrong while registering the currency')
 
 # DELETE /currency/:code
 async def rm_currency(request):
-    async with request.app['db'].acquire() as conn:
-        currency = await _get_currency_from_request(conn, request)
-        if(currency == None or currency['active'] == 0):
-            raise web.HTTPBadRequest(
-                text='You can\'t remove a not registered currency')
+    try:
+        async with request.app['db'].acquire() as conn:
+            currency = await _get_currency_from_request(conn, request)
+            if(currency == None or currency['active'] == 0):
+                raise web.HTTPBadRequest(
+                    text='You can\'t remove a not registered currency')
 
-        currency['active'] = 0
-        currency = await db.update_currency(conn, currency)
-        # if currency[code] in request.app['cache']:
-        #     request.app['cache'].pop(currency[code])
-        return web.Response(text=str(currency))
+            currency['active'] = 0
+            currency = await db.update_currency(conn, currency)
+            # if currency[code] in request.app['cache']:
+            #     request.app['cache'].pop(currency[code])
+            return web.Response(text=str(currency))
+    except OperationalError:
+        request.app['logger'].exception('rm_currency - error')
+        return web.HTTPServiceUnavailable(text='Something went wrong while unregistering the currency')
     
 async def _get_currency_code_from_request(request):
     data = await request.post()
@@ -65,13 +78,18 @@ async def _fetch_currency(request):
 
 # GET /convert?from=BTC&to=EUR&amount=123.45
 async def convert(request):
-    _from, _to, _amount = await _get_convertion_args_from_request(request)
-    amount = Amount(_amount)
-    async with request.app['db'].acquire() as conn:
-        currency_from = await _get_currency_by_code(request, conn, _from)
-        currency_to = await _get_currency_by_code(request, conn, _to)
-        ret_value = (amount.value() * currency_from['value']) / currency_to['value']
-        return web.Response(text=str(ret_value))
+    try:
+        _from, _to, _amount = await _get_convertion_args_from_request(request)
+        amount = Amount(_amount)
+        async with request.app['db'].acquire() as conn:
+            currency_from = await _get_currency_by_code(request, conn, _from)
+            currency_to = await _get_currency_by_code(request, conn, _to)
+            ret_value = (amount.value() * currency_from['value']) / currency_to['value']
+            return web.Response(text=str(ret_value))
+    except OperationalError:
+        request.app['logger'].exception('convert - error')
+        return web.HTTPServiceUnavailable(text='Something went wrong while converting the currency')
+        
 
 async def _get_currency_by_code(request, conn, code):
     if code in request.app['cache']:
