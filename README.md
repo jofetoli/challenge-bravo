@@ -43,30 +43,35 @@ Os comandos a seguir criam e rodam a aplicação dentro de uma imagem docker. De
 1 min em 3300 vus,
 2 segs de ramp-down;
 
-    |checks | 100.00% ✓ 120371 ✗ 0 |
-    |data_received| 20 MB   318 kB/s|
-    |data_sent| 15 MB   226 kB/s|
-    |http_req_blocked| avg=5.74ms  min=0s       med=0s    max=1.31s    p(90)=0s    p(95)=0s|
-    |http_req_connecting| avg=5.55ms  min=0s       med=0s    max=1.19s    p(90)=0s    p(95)=0s|
-    |http_req_duration| avg=1.6s    min=3.99ms   med=1.48s max=18.84s   p(90)=2s    p(95)=2.41s|
-    |http_req_receiving| avg=58.08µs min=0s       med=0s    max=144.73ms p(90)=0s    p(95)=0s|
-    |http_req_sending| avg=89.44µs min=0s       med=0s    max=579.07ms p(90)=0s    p(95)=0s|
-    |http_req_tls_handshaking| avg=0s      min=0s       med=0s    max=0s       p(90)=0s    p(95)=0s|
-    |http_req_waiting| avg=1.6s    min=3.99ms   med=1.48s max=18.84s   p(90)=1.99s p(95)=2.41s|
-    |http_reqs| 120371  1868.794252/s|
-    |iteration_duration| avg=1.71s   min=104.99ms med=1.58s max=20.11s   p(90)=2.12s p(95)=2.51s|
-    |iterations| 120371  1868.794252/s|
-    |vus| 1214    min=1214 max=3300|
-    |vus_max| 3300    min=3300 max=3300|
+    | checks | 100.00% ✓ 120371 ✗ 0 |
+    | data_received | 20 MB   318 kB/s |
+    | data_sent | 15 MB   226 kB/s |
+    | http_req_blocked | avg=5.74ms  min=0s       med=0s    max=1.31s    p(90)=0s    p(95)=0s |
+    | http_req_connecting | avg=5.55ms  min=0s       med=0s    max=1.19s    p(90)=0s    p(95)=0s |
+    | http_req_duration | avg=1.6s    min=3.99ms   med=1.48s max=18.84s   p(90)=2s    p(95)=2.41s |
+    | http_req_receiving | avg=58.08µs min=0s       med=0s    max=144.73ms p(90)=0s    p(95)=0s |
+    | http_req_sending | avg=89.44µs min=0s       med=0s    max=579.07ms p(90)=0s    p(95)=0s |
+    | http_req_tls_handshaking | avg=0s      min=0s       med=0s    max=0s       p(90)=0s    p(95)=0s |
+    | http_req_waiting | avg=1.6s    min=3.99ms   med=1.48s max=18.84s   p(90)=1.99s p(95)=2.41s |
+    | http_reqs | 120371  1868.794252/s |
+    | iteration_duration | avg=1.71s   min=104.99ms med=1.58s max=20.11s   p(90)=2.12s p(95)=2.51s |
+    | iterations | 120371  1868.794252/s |
+    | vus | 1214    min=1214 max=3300 |
+    | vus_max | 3300    min=3300 max=3300 |
 
 ## Documentação do endpoint de conversão
+
 Endpoint da chamada de conversão:
+
 `http://localhost:5678/currency/convert`
+
 Parâmetros:
 - from: string
 - to: string
 - amount: string
+
 todos os campos são obrigatórios.
+
 amount deverá ser um decimal positivo com separador decimal `.`
 
 Ex.: `http://localhost:5678/currency/convert?from=BTC&to=EUR&amount=123.45`
@@ -75,18 +80,22 @@ Caso algum campo ou formato não venha como desejado ou uma moeda não cadastrad
 Essa api utiliza um cache de 15 segundos dos valores das moedas. e a aplicação leva `update_frequency` (valor configurável) para atualizar os valores das moedas em uma api externa. Logo os valores das moedas não são exatamente os valores atuais da moeda, podendo ter atrasos de (update_frequency+15) segundos em seu valor
 
 Endpoint da registro de conversão:
-PUT 'http://localhost:5678/currency'
+
+PUT:
+- `http://localhost:5678/currency`
 Body: 
- - code: string
+- code: string
 
 Caso um código não existente, haverá retorno de um Bad Request 
 Caso um código já cadastrado, haverá retorno de um OK 
 Caso um código não cadastrado, haverá retorno de um OK
 
 Endpoint da desregistro de conversão:
-DEL 'http://localhost:5678/currency'
+
+DEL:
+- `http://localhost:5678/currency`
 Body: 
- - code: string
+- code: string
 
 Caso um código já cadastrado, haverá retorno de um OK 
 Caso um código não cadastrado, haverá retorno de um Bad Request 
@@ -115,7 +124,7 @@ Para execuçao dos testes no formato unittest, foi utilizado o pytest biblioteca
 
 ## TODO:
  - A aplicação realiza um cache para conseguir atingir as necessárias 1000 requisições por segundo. Esse cache ainda não é compartilhado impossibilitando a pulverizaçao das requests em varios possiveis dockers com a aplicação principal. Esse cache dura 15s e não é configuravel.
- - Subir a cobertura do código da aplicão.
+ - Subir a cobertura do código da aplicação.
  - criar uma documentação do código.
  - criar uma validação para os códigos da moedas. Essas estão sendo validadas pela api externa.
  
