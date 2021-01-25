@@ -13,4 +13,6 @@ COPY config /app/config/
 
 WORKDIR /app
 
+RUN python3 -m pytest
+
 CMD [ "python3", "/app/server.py" ]
