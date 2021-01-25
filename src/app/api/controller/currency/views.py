@@ -94,7 +94,7 @@ async def convert(request):
 async def _get_currency_by_code(request, conn, code):
     if code in request.app['cache']:
         currency = request.app['cache'][code]
-        if datetime.now() - currency['last_update'] < timedelta(minutes=1):
+        if datetime.now() - currency['last_update'] < timedelta(seconds=15):
             return currency
     currency = await db.get_currency_by_code(conn, code)
     if currency is None:

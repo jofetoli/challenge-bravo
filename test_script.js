@@ -3,14 +3,14 @@ import { check, sleep } from 'k6';
 
 export let options = {
     stages: [
-      { duration: '10s', target: 1000 },
-      { duration: '10s', target: 2000 },
-      { duration: '10s', target: 3000 },
+      { duration: '2s', target: 3300 },
+      { duration: '60s', target: 3300 },
+      { duration: '2s', target: 0 },
     ],
   };
 
   export default function () {
-    let res = http.get('http://localhost:8080/convert?from=USD&to=BRL&amount=1');
+    let res = http.get('http://localhost:5678/currency/convert?from=USD&to=BRL&amount=1');
     check(res, {
      'is status 200': (r) => r.status === 200,
    });

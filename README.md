@@ -1,65 +1,120 @@
 # <img src="https://avatars1.githubusercontent.com/u/7063040?v=4&s=200.jpg" alt="HU" width="24" /> Desafio Bravo
 
-Construa uma API, que responda JSON, para conversão monetária. Ela deve ter uma moeda de lastro (USD) e fazer conversões entre diferentes moedas com cotações de verdade e atuais.
+# Api de conversão de moedas
 
-A API deve, originalmente, converter entre as seguintes moedas:
+## Pré-requisitos
+- Docker (ou Docker for Windows): https://docs.docker.com/install/
 
--   USD
--   BRL
--   EUR
--   BTC
--   ETH
+## Instruções para configuração/instalação
+A aplicação roda dentro de uma imagem docker, portanto todo o ambiente é instalado diretamente através da mesma.
 
-Ex: USD para BRL, USD para BTC, ETH para BRL, etc...
+### Configuração
+A configuração do sistema é baseada nos valores do arquivo de configurações <root>/config/bravo.yaml
 
-A requisição deve receber como parâmetros: A moeda de origem, o valor a ser convertido e a moeda final.
+| Chave | Descrição |
+| --- | --- |
+| postgres | configurações do banco postgres da aplicação |
+| --- | --- |
+| database | banco utilizado pela aplicação |
+| user | usuário de acesso ao banco |
+| password | senha do usuário para acesso ao banco |
+| host | hostname do servidor do banco |
+| port | porta de acesso ao banco |
+| --- | --- |
+| cron | configurações da tarefa que executa em segundo plano atualizado as cotações |
+| --- | --- |
+| update_frequency | frequencia de atualização das cotações das moedas |
 
-Ex: `?from=BTC&to=EUR&amount=123.45`
+* O banco de dados e a tarefa são executados em dois dockers separados da aplicação principal. O banco necessita ser postgres mas a aplicação pode apontar para um outro banco já instanciado.
+* No path <root>/migrations arquivos que povoam um novo banco.
 
-Construa também um endpoint para adicionar e remover moedas suportadas pela API, usando os verbos HTTP.
+### Instalação
+Os comandos a seguir criam e rodam a aplicação dentro de uma imagem docker. Dentro da pasta raiz do repositório:
+  - `docker-compose build --no-cache` - Cria imagem chamada flima/bravo-ch:0.1 durante criação os testes unitários são executados.
+  - `docker-compose up -d` - Executa imagem em daemon (e cria se o passo anterior não tiver sido executado previamente). Dentro do arquivo <root>/docker-compose.yml estão as configurações de portas que o sistema irá utilizar por default a aplicação irá utilizar a porta 5678 do localhost.
 
-Você pode usar qualquer linguagem de programação para o desafio. Abaixo a lista de linguagens que nós aqui do HU temos mais afinidade:
+### Execução dos testes
+- Dentro do docker da aplicação ou tarefa na pasta `/app/`, executar
+`python3 -m pytest`
+- Também realizei um teste de estresse utilizando o software k6, executar de preferência de fora do docker ou wsl já que haverá concorrência.
+`k6 run test_script.js` (de dentro do windows obtive entre 1450 e 2100 req/s, já no wsl obtive algo em torno de 500 req/s)
 
--   JavaScript (NodeJS)
--   Python
--   Go
--   Ruby
--   C++
--   PHP
+2 segs de ramp-up até 3300 vus,
+1 min em 3300 vus,
+2 segs de ramp-down;
+    checks.....................: 100.00% ✓ 120371 ✗ 0
+    data_received..............: 20 MB   318 kB/s
+    data_sent..................: 15 MB   226 kB/s
+    http_req_blocked...........: avg=5.74ms  min=0s       med=0s    max=1.31s    p(90)=0s    p(95)=0s
+    http_req_connecting........: avg=5.55ms  min=0s       med=0s    max=1.19s    p(90)=0s    p(95)=0s
+    http_req_duration..........: avg=1.6s    min=3.99ms   med=1.48s max=18.84s   p(90)=2s    p(95)=2.41s
+    http_req_receiving.........: avg=58.08µs min=0s       med=0s    max=144.73ms p(90)=0s    p(95)=0s
+    http_req_sending...........: avg=89.44µs min=0s       med=0s    max=579.07ms p(90)=0s    p(95)=0s
+    http_req_tls_handshaking...: avg=0s      min=0s       med=0s    max=0s       p(90)=0s    p(95)=0s
+    http_req_waiting...........: avg=1.6s    min=3.99ms   med=1.48s max=18.84s   p(90)=1.99s p(95)=2.41s
+    http_reqs..................: 120371  1868.794252/s
+    iteration_duration.........: avg=1.71s   min=104.99ms med=1.58s max=20.11s   p(90)=2.12s p(95)=2.51s
+    iterations.................: 120371  1868.794252/s
+    vus........................: 1214    min=1214 max=3300
+    vus_max....................: 3300    min=3300 max=3300
 
-## Requisitos
+## Documentação do endpoint de conversão
+Endpoint da chamada de conversão:
+`http://localhost:5678/currency/convert`
+Parâmetros:
+- from: string
+- to: string
+- amount: string
+todos os campos são obrigatórios.
+amount deverá ser um decimal positivo com separador decimal `.`
 
--   Forkar esse desafio e criar o seu projeto (ou workspace) usando a sua versão desse repositório, tão logo acabe o desafio, submeta um _pull request_.
-    -   Caso você tenha algum motivo para não submeter um _pull request_, crie um repositório privado no Github, faça todo desafio na branch **master** e não se esqueça de preencher o arquivo `pull-request.txt`. Tão logo termine seu desenvolvimento, adicione como colaborador o usuário `automator-hurb` no seu repositório e o deixe disponível por pelo menos 30 dias. **Não adicione o `automator-hurb` antes do término do desenvolvimento.**
-    -   Caso você tenha algum problema para criar o repositório privado, ao término do desafio preencha o arquivo chamado `pull-request.txt`, comprima a pasta do projeto - incluindo a pasta `.git` - e nos envie por email.
--   O código precisa rodar em macOS ou Ubuntu (preferencialmente como container Docker)
--   Para executar seu código, deve ser preciso apenas rodar os seguintes comandos:
-    -   git clone \$seu-fork
-    -   cd \$seu-fork
-    -   comando para instalar dependências
-    -   comando para executar a aplicação
--   A API pode ser escrita com ou sem a ajuda de _frameworks_
-    -   Se optar por usar um _framework_ que resulte em _boilerplate code_, assinale no README qual pedaço de código foi escrito por você. Quanto mais código feito por você, mais conteúdo teremos para avaliar.
--   A API precisa suportar um volume de 1000 requisições por segundo em um teste de estresse.
+Ex.: `http://localhost:5678/currency/convert?from=BTC&to=EUR&amount=123.45`
+Caso algum campo ou formato não venha como desejado ou uma moeda não cadastrada seja requisitada haverá retorno de um Bad Request 
 
-## Critério de avaliação
+Essa api utiliza um cache de 15 segundos dos valores das moedas. e a aplicação leva `update_frequency` (valor configurável) para atualizar os valores das moedas em uma api externa. Logo os valores das moedas não são exatamente os valores atuais da moeda, podendo ter atrasos de (update_frequency+15) segundos em seu valor
 
--   **Organização do código**: Separação de módulos, view e model, back-end e front-end
--   **Clareza**: O README explica de forma resumida qual é o problema e como pode rodar a aplicação?
--   **Assertividade**: A aplicação está fazendo o que é esperado? Se tem algo faltando, o README explica o porquê?
--   **Legibilidade do código** (incluindo comentários)
--   **Segurança**: Existe alguma vulnerabilidade clara?
--   **Cobertura de testes** (Não esperamos cobertura completa)
--   **Histórico de commits** (estrutura e qualidade)
--   **UX**: A interface é de fácil uso e auto-explicativa? A API é intuitiva?
--   **Escolhas técnicas**: A escolha das bibliotecas, banco de dados, arquitetura, etc, é a melhor escolha para a aplicação?
+Endpoint da registro de conversão:
+PUT 'http://localhost:5678/currency'
+Body: 
+ - code: string
 
-## Dúvidas
+Caso um código não existente, haverá retorno de um Bad Request 
+Caso um código já cadastrado, haverá retorno de um OK 
+Caso um código não cadastrado, haverá retorno de um OK
 
-Quaisquer dúvidas que você venha a ter, consulte as [_issues_](https://github.com/HurbCom/challenge-bravo/issues) para ver se alguém já não a fez e caso você não ache sua resposta, abra você mesmo uma nova issue!
+Endpoint da desregistro de conversão:
+DEL 'http://localhost:5678/currency'
+Body: 
+ - code: string
 
-Boa sorte e boa viagem! ;)
+Caso um código já cadastrado, haverá retorno de um OK 
+Caso um código não cadastrado, haverá retorno de um Bad Request 
 
-<p align="center">
-  <img src="ca.jpg" alt="Challange accepted" />
-</p>
+## Escolhas técnicas
+### Framework
+Foi utilizado o aiohttp para criação de um micro serviço.
+### Deploy Method
+Docker foi utilizado para simplicidade de criação e execução de um ambiente isolado e replicável.
+### Integração para conversão de moedas
+Foi utilizada a api CoinBase (https://api.coinbase.com/v2/exchange-rates). Escolha baseada em:
+ - variedade de moedas e acessos ilimitados a api sem necessidade de subscription ou pagamentos.
+ - certificado SSL OK
+ - acesso a todas as conversões basedas em um lastro.
+ - documentação disponivel
+
+### Lib de testes
+Para execuçao dos testes no formato unittest, foi utilizado o pytest biblioteca com ótima documentação e comunidade ativa.
+
+## Links
+- https://docs.docker.com
+- https://docs.aiohttp.org/en/stable/index.html
+- https://docs.pytest.org/en/stable/
+- https://developers.coinbase.com/api/v2
+
+
+## TODO:
+ - A aplicação realiza um cache para conseguir atingir as necessárias 1000 requisições por segundo. Esse cache ainda não é compartilhado impossibilitando a pulverizaçao das requests em varios possiveis dockers com a aplicação principal. Esse cache dura 15s e não é configuravel.
+ - Subir a cobertura do código da aplicão.
+ - criar uma documentação do código.
+ - criar uma validação para os códigos da moedas. Essas estão sendo validadas pela api externa.
+ 
