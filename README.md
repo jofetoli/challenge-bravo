@@ -42,21 +42,22 @@ Os comandos a seguir criam e rodam a aplicação dentro de uma imagem docker. De
 2 segs de ramp-up até 3300 vus,
 1 min em 3300 vus,
 2 segs de ramp-down;
-    checks.....................: 100.00% ✓ 120371 ✗ 0
-    data_received..............: 20 MB   318 kB/s
-    data_sent..................: 15 MB   226 kB/s
-    http_req_blocked...........: avg=5.74ms  min=0s       med=0s    max=1.31s    p(90)=0s    p(95)=0s
-    http_req_connecting........: avg=5.55ms  min=0s       med=0s    max=1.19s    p(90)=0s    p(95)=0s
-    http_req_duration..........: avg=1.6s    min=3.99ms   med=1.48s max=18.84s   p(90)=2s    p(95)=2.41s
-    http_req_receiving.........: avg=58.08µs min=0s       med=0s    max=144.73ms p(90)=0s    p(95)=0s
-    http_req_sending...........: avg=89.44µs min=0s       med=0s    max=579.07ms p(90)=0s    p(95)=0s
-    http_req_tls_handshaking...: avg=0s      min=0s       med=0s    max=0s       p(90)=0s    p(95)=0s
-    http_req_waiting...........: avg=1.6s    min=3.99ms   med=1.48s max=18.84s   p(90)=1.99s p(95)=2.41s
-    http_reqs..................: 120371  1868.794252/s
-    iteration_duration.........: avg=1.71s   min=104.99ms med=1.58s max=20.11s   p(90)=2.12s p(95)=2.51s
-    iterations.................: 120371  1868.794252/s
-    vus........................: 1214    min=1214 max=3300
-    vus_max....................: 3300    min=3300 max=3300
+
+    |checks | 100.00% ✓ 120371 ✗ 0 |
+    |data_received| 20 MB   318 kB/s|
+    |data_sent| 15 MB   226 kB/s|
+    |http_req_blocked| avg=5.74ms  min=0s       med=0s    max=1.31s    p(90)=0s    p(95)=0s|
+    |http_req_connecting| avg=5.55ms  min=0s       med=0s    max=1.19s    p(90)=0s    p(95)=0s|
+    |http_req_duration| avg=1.6s    min=3.99ms   med=1.48s max=18.84s   p(90)=2s    p(95)=2.41s|
+    |http_req_receiving| avg=58.08µs min=0s       med=0s    max=144.73ms p(90)=0s    p(95)=0s|
+    |http_req_sending| avg=89.44µs min=0s       med=0s    max=579.07ms p(90)=0s    p(95)=0s|
+    |http_req_tls_handshaking| avg=0s      min=0s       med=0s    max=0s       p(90)=0s    p(95)=0s|
+    |http_req_waiting| avg=1.6s    min=3.99ms   med=1.48s max=18.84s   p(90)=1.99s p(95)=2.41s|
+    |http_reqs| 120371  1868.794252/s|
+    |iteration_duration| avg=1.71s   min=104.99ms med=1.58s max=20.11s   p(90)=2.12s p(95)=2.51s|
+    |iterations| 120371  1868.794252/s|
+    |vus| 1214    min=1214 max=3300|
+    |vus_max| 3300    min=3300 max=3300|
 
 ## Documentação do endpoint de conversão
 Endpoint da chamada de conversão:
