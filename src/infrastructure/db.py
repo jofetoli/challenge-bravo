@@ -1,4 +1,7 @@
-#infrastructure/db.py
+"""
+@package infrastructure.db
+as this project only has an entity in its database everything related to db is in this module
+"""
 import aiopg.sa
 from sqlalchemy import (
     MetaData, Table, Column, ForeignKey,
@@ -12,6 +15,10 @@ from infrastructure.logger import get_logger
 meta = MetaData()
 logger = get_logger('db')
 
+
+"""
+currency table information
+"""
 _currency = Table(
     'currency', meta,
 
@@ -23,6 +30,9 @@ _currency = Table(
 )
 
 async def init_pg(app):
+    """
+    init a db engine using the app configurations and store it in app['db']
+    """
     logger.info('start db')
     conf = app['config']['postgres']
     for i in range(0, 5):
@@ -44,11 +54,17 @@ async def init_pg(app):
     app['db'] = engine
 
 async def close_pg(app):
+    """
+    method created to be called when the app closes
+    """
     logger.info('close db')
     app['db'].close()
     await app['db'].wait_closed()
 
 async def get_all_currency(conn):
+    """
+    fetch all currencies active and registered currencies in the database
+    """
     try:
         result = await conn.execute(
             _currency.select()
@@ -61,6 +77,9 @@ async def get_all_currency(conn):
 
 
 async def get_currency_by_code(conn, code):
+    """
+    fetch one registered currency by code
+    """
     try:
         result = await conn.execute(
             _currency.select()
@@ -72,6 +91,9 @@ async def get_currency_by_code(conn, code):
         raise e
 
 async def insert_currency(conn, currency_code, currency_rate):
+    """
+    insert currency in the database
+    """
     try:
         currency = {
             'code': currency_code,
@@ -88,6 +110,9 @@ async def insert_currency(conn, currency_code, currency_rate):
         raise e
 
 async def update_currency(conn, currency):
+    """
+    update currency in the database
+    """
     try:
         currency['last_update'] = datetime.now()
         await conn.execute(
