@@ -7,6 +7,10 @@ postgres:
   port: 5432
   minsize: 1
   maxsize: 5
+  
+redis:
+  host: redis
+  port: 6379
 
 cron:
   update_frequency: 60  # seconds

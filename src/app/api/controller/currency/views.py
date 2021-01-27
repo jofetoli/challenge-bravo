@@ -43,8 +43,7 @@ async def rm_currency(request):
 
             currency['active'] = 0
             currency = await db.update_currency(conn, currency)
-            # if currency[code] in request.app['cache']:
-            #     request.app['cache'].pop(currency[code])
+            request.app['cache'].delete(currency['code'])
             return web.Response(text=str(currency))
     except OperationalError:
         request.app['logger'].exception('rm_currency - error')
@@ -82,28 +81,21 @@ async def convert(request):
         _from, _to, _amount = await _get_convertion_args_from_request(request)
         amount = Amount(_amount)
         async with request.app['db'].acquire() as conn:
-            currency_from = await _get_currency_by_code(request, conn, _from)
-            currency_to = await _get_currency_by_code(request, conn, _to)
-            ret_value = (amount.value() * currency_from['value']) / currency_to['value']
+            currency_from = await _get_currency_value_by_code(request, conn, _from)
+            currency_to = await _get_currency_value_by_code(request, conn, _to)
+            ret_value = (amount.value() * float(currency_to)) / float(currency_from)
             return web.Response(text=str(ret_value))
     except OperationalError:
         request.app['logger'].exception('convert - error')
         return web.HTTPServiceUnavailable(text='Something went wrong while converting the currency')
         
 
-async def _get_currency_by_code(request, conn, code):
-    if code in request.app['cache']:
-        currency = request.app['cache'][code]
-        if datetime.now() - currency['last_update'] < timedelta(seconds=15):
-            return currency
+async def _get_currency_value_by_code(request, conn, code):
+    currency_value = request.app['cache'].get(code)
+    if currency_value is not None:
+        return currency_value
     currency = await db.get_currency_by_code(conn, code)
     if currency is None:
         raise web.HTTPBadRequest(text=code + ' is not a registered currency')
-    currency['last_update'] = datetime.now()
-    request.app['cache'][code] = currency
-    return currency
-
-
-
-
-    
+    request.app['cache'].set(code, currency['value'])
+    return currency['value']

@@ -10,6 +10,12 @@ services:
       POSTGRES_PASSWORD: bravo_pass
       POSTGRES_USER: bravo
 
+  redis:
+        image: redis:latest
+        volumes:
+            - ./config/redis.conf:/redis.conf
+        command: [ "redis-server", "/redis.conf" ]
+
   app:
     build: .
     image: flima/bravo-ch:0.1
@@ -17,6 +23,7 @@ services:
       - 5678:8080
     depends_on:
       - postgres
+      - redis
 
   cron:
     build:
@@ -24,3 +31,4 @@ services:
       dockerfile: ./Dockerfile.cron
     depends_on:
       - postgres
+      - redis
