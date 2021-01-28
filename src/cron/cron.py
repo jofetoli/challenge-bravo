@@ -14,6 +14,7 @@ cron = {}
 
 cron['logger'] = get_logger('cron')
 cron['config'] = config
+cron['cache'] = init_redis(cron['config'])
 
 async def updating_currencies(client):
     try:
@@ -35,11 +36,12 @@ async def updating_currencies(client):
 async def main():
     client = CurrencyFetcher(ClientSession())
     await init_pg(cron)
-    init_redis(cron)
-    while True:
-        await updating_currencies(client)
-        await asyncio.sleep(cron['config']['cron']['update_frequency'])
-    await close_pg(cron)
+    try:
+        while True:
+            await updating_currencies(client)
+            await asyncio.sleep(cron['config']['cron']['update_frequency'])
+    except:
+        await close_pg(cron)
 
 asyncio.run(main())
 

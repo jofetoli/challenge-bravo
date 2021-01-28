@@ -1,18 +1,24 @@
 #infrastructure/cache.py
-import redis
+from redis import Redis
+from time import sleep
 
-def init_redis(app):
+from infrastructure.logger import get_logger
+
+
+logger = get_logger('redis')
+
+def init_redis(config):
     """
-    init a cache client using the app configurations and store it in app['cache']
+    init a cache client using the app configurations
     """
-    app['logger'].info('start cache')
-    conf = app['config']['redis']
+    logger.info('start cache')
+    config = config['redis']
     for i in range(0, 5):
         try:
-            client = redis.Redis(host=conf['host'], port=conf['port'])
+            client = Redis(host=config['host'], port=config['port'])
             break
         except Exception as e:
             if i >= 4:
                 raise e
             sleep(1)
-    app['cache'] = client
+    return client

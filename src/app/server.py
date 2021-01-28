@@ -15,10 +15,9 @@ setup_routes(app)
 app['config'] = config
 app['currency_client'] = CurrencyFetcher(ClientSession())
 app['logger'] = get_logger('bravo')
-init_redis(app)
+app['cache'] = init_redis(app['config'])
 
 app.on_startup.append(init_pg)
-
 app.on_cleanup.append(close_pg)
 
 web.run_app(app)
