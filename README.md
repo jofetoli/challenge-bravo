@@ -65,7 +65,7 @@ stage 3 - 2 segs de ramp-down
 
 ### Endpoint de consulta de moedas cadastradas:
 
-`GET http://localhost:5678/`
+`GET http://localhost:5678/currency`
 
 Retorna todas as moedas cadastradas com suas cotações e momento de ultima atualização
 
