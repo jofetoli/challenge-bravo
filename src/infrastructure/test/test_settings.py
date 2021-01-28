@@ -1,7 +1,8 @@
 import unittest
-
 from yaml.scanner import ScannerError
+
 from infrastructure.settings import get_config, config
+
 
 class SettingsTests(unittest.TestCase):
 

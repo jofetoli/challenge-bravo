@@ -1,16 +1,17 @@
 # app/api/controller/currency/views.py
 from aiohttp import web
-import infrastructure.db as db
 from datetime import datetime, timedelta
-from model.amount import Amount
 from psycopg2 import OperationalError
 
+from infrastructure.db import update_currency, get_all_currency, get_currency_by_code, insert_currency
+from model.amount import Amount
 
-# GET /
+
+# GET /currency
 async def index(request):
     try:
         async with request.app['db'].acquire() as conn:
-            currencies = await db.get_all_currency(conn)
+            currencies = await get_all_currency(conn)
             return web.Response(text=str(currencies))
     except OperationalError:
         request.app['logger'].exception('index - error')
@@ -23,10 +24,10 @@ async def add_currency(request):
             currency = await _get_currency_from_request(conn, request)
             if(currency == None):
                 currency_code, currency_rate = await _fetch_currency(request) 
-                currency = await db.insert_currency(conn, currency_code, currency_rate)
+                currency = await insert_currency(conn, currency_code, currency_rate)
             elif currency['active'] == 0:
                 currency['active'] = 1
-                currency = await db.update_currency(conn, currency)
+                currency = await update_currency(conn, currency)
             return web.Response(text=str(currency))
     except OperationalError:
         request.app['logger'].exception('add_currency - error')
@@ -42,7 +43,7 @@ async def rm_currency(request):
                     text='You can\'t remove a not registered currency')
 
             currency['active'] = 0
-            currency = await db.update_currency(conn, currency)
+            currency = await update_currency(conn, currency)
             request.app['cache'].delete(currency['code'])
             return web.Response(text=str(currency))
     except OperationalError:
@@ -67,7 +68,7 @@ async def _get_convertion_args_from_request(request):
 
 async def _get_currency_from_request(conn, request):
     currency_code = await _get_currency_code_from_request(request)
-    currency = await db.get_currency_by_code(conn, currency_code)
+    currency = await get_currency_by_code(conn, currency_code)
     return currency
 
 async def _fetch_currency(request):
@@ -94,7 +95,7 @@ async def _get_currency_value_by_code(request, conn, code):
     currency_value = request.app['cache'].get(code)
     if currency_value is not None:
         return currency_value
-    currency = await db.get_currency_by_code(conn, code)
+    currency = await get_currency_by_code(conn, code)
     if currency is None:
         raise web.HTTPBadRequest(text=code + ' is not a registered currency')
     request.app['cache'].set(code, currency['value'])

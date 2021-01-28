@@ -3,18 +3,19 @@
 as this project only has an entity in its database everything related to db is in this module
 """
 import aiopg.sa
+from datetime import datetime
+from psycopg2 import OperationalError
 from sqlalchemy import (
     MetaData, Table, Column, ForeignKey,
     Integer, String, DateTime, Boolean, Float
 )
-from datetime import datetime
 from time import sleep
-from psycopg2 import OperationalError
+
 from infrastructure.logger import get_logger
+
 
 meta = MetaData()
 logger = get_logger('db')
-
 
 """
 currency table information

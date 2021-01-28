@@ -1,12 +1,13 @@
 # app/server.py
 
 from aiohttp import web, ClientSession
+
 from api.routes import setup_routes
+from infrastructure.cache import init_redis
+from infrastructure.db import close_pg, init_pg
+from infrastructure.logger import get_logger
 from infrastructure.settings import config
 from integrations.currency_fetcher import CurrencyFetcher
-from infrastructure.db import close_pg, init_pg
-from infrastructure.cache import init_redis
-from infrastructure.logger import get_logger
 
 
 app = web.Application()

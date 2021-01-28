@@ -1,6 +1,7 @@
 #integrations\currency_fetcher.py
 from aiohttp import web
 
+
 class CurrencyFetcher:
     _session = None
 

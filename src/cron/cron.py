@@ -1,15 +1,14 @@
 #cron/cron.py
-
-from datetime import timedelta
-from aiohttp import web, ClientSession
-from integrations.currency_fetcher import CurrencyFetcher
-from infrastructure.db import close_pg, init_pg
-from infrastructure.cache import init_redis
-import infrastructure.db as db
-from infrastructure.settings import config
-from infrastructure.logger import get_logger
-
 import asyncio
+from aiohttp import web, ClientSession
+from datetime import timedelta
+
+from infrastructure.cache import init_redis
+from infrastructure.db import close_pg, init_pg, get_all_currency, update_currency
+from infrastructure.logger import get_logger
+from infrastructure.settings import config
+from integrations.currency_fetcher import CurrencyFetcher
+
 
 cron = {}
 
@@ -22,12 +21,12 @@ async def updating_currencies(client):
         currencies_dict = await client.get_currencies()
         cron['logger'].info("got currencies")
         async with cron['db'].acquire() as conn:
-            registered_currencies_dict = await asyncio.wait_for(db.get_all_currency(conn), timeout=3.0) 
+            registered_currencies_dict = await asyncio.wait_for(get_all_currency(conn), timeout=3.0) 
             cron['logger'].info("got registered currencies")
             for reg_currency in registered_currencies_dict:
                 reg_currency['value'] = currencies_dict['data']['rates'][reg_currency['code']]
                 cron['cache'].delete(reg_currency['code'])
-                currency = await db.update_currency(conn, reg_currency)
+                currency = await update_currency(conn, reg_currency)
                 cron['logger'].info(reg_currency)
         cron['logger'].info("ending...")
     except:

@@ -2,6 +2,7 @@
 
 from api.controller.currency.views import index, add_currency, rm_currency, convert
 
+
 def setup_routes(app):
     app.router.add_get('/currency', index)
 

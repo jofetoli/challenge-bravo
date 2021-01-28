@@ -1,6 +1,6 @@
 import unittest
-
 from aiohttp.web_exceptions import HTTPBadRequest
+
 from model.amount import Amount
 
 class AmountTests(unittest.TestCase):
