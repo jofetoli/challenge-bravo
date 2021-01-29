@@ -43,7 +43,7 @@ Os comandos a seguir criam e rodam a aplicação dentro de uma rede docker. Dent
  - Com a instancia default: `docker exec challenge-bravo_app_1 python -m pytest`
  - Ou de dentro do docker da aplicação: no pwd `/app/`, executar `python3 -m pytest`
  #### Load
-- Também realizei um teste de estresse utilizando o software k6, executar de preferência de fora do docker ou wsl já que haverá concorrência: `k6 run test_script.js` (de dentro do windows obtive entre 1250 e 2100 req/s dependendo da implementação, já no wsl obtive algo em torno de 500 req/s)
+- Também realizei alguns teste de estresse utilizando o software k6, executar de preferência de fora do docker ou wsl já que haverá concorrência: `k6 run test_script.js` (de dentro do windows obtive entre 1100 e 2100 req/s dependendo dos recursos disponíveis, já no wsl obtive algo em torno de 500 req/s)
 
 stage 1 - 2 segs de ramp-up até 3300 vus
 
@@ -51,21 +51,22 @@ stage 2 - 1 min em 3300 vus
 
 stage 3 - 2 segs de ramp-down
 
-    | checks                    | 100.00% ✓ 120371 ✗ 0 |
-    | data_received             | 20 MB   318 kB/s |
-    | data_sent                 | 15 MB   226 kB/s |
-    | http_req_blocked          | avg=5.74ms  min=0s       med=0s    max=1.31s    p(90)=0s    p(95)=0s |
-    | http_req_connecting       | avg=5.55ms  min=0s       med=0s    max=1.19s    p(90)=0s    p(95)=0s |
-    | http_req_duration         | avg=1.6s    min=3.99ms   med=1.48s max=18.84s   p(90)=2s    p(95)=2.41s |
-    | http_req_receiving        | avg=58.08µs min=0s       med=0s    max=144.73ms p(90)=0s    p(95)=0s |
-    | http_req_sending          | avg=89.44µs min=0s       med=0s    max=579.07ms p(90)=0s    p(95)=0s |
-    | http_req_tls_handshaking  | avg=0s      min=0s       med=0s    max=0s       p(90)=0s    p(95)=0s |
-    | http_req_waiting          | avg=1.6s    min=3.99ms   med=1.48s max=18.84s   p(90)=1.99s p(95)=2.41s |
-    | http_reqs                 | 120371  1868.794252/s |
-    | iteration_duration        | avg=1.71s   min=104.99ms med=1.58s max=20.11s   p(90)=2.12s p(95)=2.51s |
-    | iterations                | 120371  1868.794252/s |
-    | vus                       | 1214    min=1214 max=3300 |
-    | vus_max                   | 3300    min=3300 max=3300 |
+    | checks                     | 100 00% ✓ 71717  ✗ 0 |
+    | data_received              | 11 MB   173 kB/s |
+    | data_sent                  | 8 7 MB  134 kB/s |
+    | http_req_blocked           | avg=5 71µs  min=0s      med=0s   max=7.99ms  p(90)=0s   p(95)=0s |
+    | http_req_connecting        | avg=2.14µs  min=0s      med=0s   max=3.99ms  p(90)=0s   p(95)=0s |
+    | http_req_duration          | avg=2.79s   min=17.75ms med=2.7s max=18.67s  p(90)=3.5s p(95)=4.14s |
+    | http_req_receiving         | avg=66.69µs min=0s      med=0s   max=40.99ms p(90)=0s   p(95)=986.41µs |
+    | http_req_sending           | avg=7.81µs  min=0s      med=0s   max=11.99ms p(90)=0s   p(95)=0s |
+    | http_req_tls_handshaking   | avg=0s      min=0s      med=0s   max=0s      p(90)=0s   p(95)=0s |
+    | http_req_waiting           | avg=2.79s   min=17.75ms med=2.7s max=18.67s  p(90)=3.5s p(95)=4.14s |
+    | http_reqs                  | 71717   1110.963002/s |
+    | iteration_duration         | avg=2.89s   min=120ms   med=2.8s max=18.77s  p(90)=3.6s p(95)=4.24s |
+    | iterations                 | 71717   1110.963002/s |
+    | vus                        | 1623    min=1623 max=3300 |
+    | vus_max                    | 3300    min=3300 max=3300 |
+
 
 ## Documentação do endpoint de conversão
 
@@ -135,4 +136,6 @@ Para execuçao dos testes no formato unittest, foi utilizado o pytest biblioteca
 ## TODO:
  - utilizar alguma biblioteca para criação automatica da documentação.
  - criar uma validação para os códigos da moedas. Essas estão sendo validadas pela api externa.
+ - criar um dockerfile com diferentes targets (retirando os arquivos de teste do ambiente produtivo)
+ - healthcheck endpoint
  
