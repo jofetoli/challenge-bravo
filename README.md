@@ -12,21 +12,25 @@ A aplicação roda dentro de uma imagem docker, portanto todo o ambiente é inst
 A configuração do sistema é baseada nos valores do arquivo de configurações <root>/config/bravo.yaml
 
 | Chave | Descrição |
-| --- | --- |
+| -------- | -------- |
 | postgres | configurações do banco postgres da aplicação |
-| --- | --- |
+| -------- | -------- |
 | database | banco utilizado pela aplicação |
 | user | usuário de acesso ao banco |
 | password | senha do usuário para acesso ao banco |
 | host | hostname do servidor do banco |
 | port | porta de acesso ao banco |
-| --- | --- |
+| -------- | -------- |
 | cron | configurações da tarefa que executa em segundo plano atualizado as cotações |
-| --- | --- |
+| -------- | -------- |
 | update_frequency | frequencia de atualização das cotações das moedas |
+| -------- | -------- |
+| redis | configurações do cache com as cotações da moedas |
+| -------- | -------- |
+| host | hostname do servidor do cache |
+| port | porta de acesso do cache |
 
-* O banco de dados e a tarefa são executados em dois dockers separados da aplicação principal. O banco necessita ser postgres mas a aplicação pode apontar para um outro banco já instanciado.
-* No path <root>/migrations arquivos que povoam um novo banco.
+Além disso o redis tem um arquivo de configuração que se encontra no path <root>/config/redis.conf (não foi alterado, está utilizando as configurações default do redis)
 
 ### Instalação
 Os comandos a seguir criam e rodam a aplicação dentro de uma rede docker. Dentro da pasta raiz do repositório:
@@ -34,10 +38,12 @@ Os comandos a seguir criam e rodam a aplicação dentro de uma rede docker. Dent
   - `docker-compose up -d` - Executa imagem em daemon (e cria se o passo anterior não tiver sido executado previamente). Dentro do arquivo <root>/docker-compose.yml estão as configurações de portas que o sistema irá utilizar por default a aplicação irá utilizar a porta 5678.
 
 ### Execução dos testes
-- Dentro do docker da aplicação na pasta `/app/`, executar
-`python3 -m pytest`
-- Também realizei um teste de estresse utilizando o software k6, executar de preferência de fora do docker ou wsl já que haverá concorrência.
-`k6 run test_script.js` (de dentro do windows obtive entre 1450 e 2100 req/s, já no wsl obtive algo em torno de 500 req/s)
+#### Unitarios: 
+ - Depois de construida a imagem docker: `docker run -it --entrypoint "python" flima/bravo-ch:0.1 -m pytest` (isso irá gerar mais uma instancia dessa imagem)
+ - Com a instancia default: `docker exec challenge-bravo_app_1 python -m pytest`
+ - Ou de dentro do docker da aplicação: no pwd `/app/`, executar `python3 -m pytest`
+ #### Load
+- Também realizei um teste de estresse utilizando o software k6, executar de preferência de fora do docker ou wsl já que haverá concorrência: `k6 run test_script.js` (de dentro do windows obtive entre 1250 e 2100 req/s dependendo da implementação, já no wsl obtive algo em torno de 500 req/s)
 
 stage 1 - 2 segs de ramp-up até 3300 vus
 
@@ -74,8 +80,8 @@ Retorna todas as moedas cadastradas com suas cotações e momento de ultima atua
 `GET http://localhost:5678/currency/convert`
 
 Parâmetros:
-- from: (string) 3-4 caracteres com código de moeda cadastrada
-- to: (string) 3-4 caracteres com código de moeda cadastrada
+- from: (string) 3 caracteres com código de moeda cadastrada
+- to: (string) 3 caracteres com código de moeda cadastrada
 - amount: (string) decimal positivo com separador decimal `.`
 
 todos os campos são obrigatórios.
@@ -85,15 +91,17 @@ Ex.: `http://localhost:5678/currency/convert?from=BTC&to=EUR&amount=123.45`
 
  - Caso algum campo ou formato não venha como desejado ou uma moeda não cadastrada seja requisitada haverá retorno de um Bad Request 
 
-Essa api utiliza um cache de 15 segundos dos valores das moedas. e a aplicação leva `update_frequency` (valor configurável) para atualizar os valores das moedas em uma api externa. Logo os valores das moedas não são exatamente os valores atuais, podendo ter atrasos de (`update_frequency`+15) segundos em seu valor 
+Essa api utiliza um cache dos valores das moedas. e a aplicação leva `update_frequency` (valor configurável) para atualizar os valores das moedas em uma api externa. Logo os valores das moedas não são exatamente os valores atuais, podendo ter atrasos de `update_frequency` segundos em seu valor 
 
 ### Endpoint da registro de conversão:
 
 `PUT http://localhost:5678/currency:code`
 
-- Caso `code` não estiver na lista de possíveis moedas ou for vazio, haverá retorno de um Bad Request 
+ - Caso `code` não estiver na lista de possíveis moedas ou for vazio, haverá retorno de um Bad Request 
  - Caso `code` já cadastrado, haverá retorno de um OK 
  - Caso `code` não cadastrado, haverá retorno de um OK e adição da moeda
+
+ [Moedas disponiveis na API](/docs/currencies.md)
 
 ### Endpoint da desregistro de conversão:
 
@@ -110,7 +118,7 @@ Docker foi utilizado para simplicidade de criação e execução de um ambiente 
 ### Integração para conversão de moedas
 Foi utilizada a api CoinBase (https://api.coinbase.com/v2/exchange-rates). Escolha baseada em:
  - variedade de moedas e acessos ilimitados a api sem necessidade de subscription ou pagamentos.
- - certificado SSL OK
+ - certificado SSL OK (2021-01-28)
  - acesso a todas as conversões basedas em um lastro.
  - documentação disponivel
 
@@ -125,348 +133,6 @@ Para execuçao dos testes no formato unittest, foi utilizado o pytest biblioteca
 
 
 ## TODO:
- - A aplicação realiza um cache para conseguir atingir as necessárias 1000 requisições por segundo. Esse cache ainda não é compartilhado impossibilitando a pulverizaçao das requests em varios possiveis dockers com a aplicação principal. Esse cache dura 15s e não é configuravel. é necessario utilizar um biblioteca como o REDIS (https://redis.io)
- - Subir a cobertura do código da aplicação.
  - utilizar alguma biblioteca para criação automatica da documentação.
  - criar uma validação para os códigos da moedas. Essas estão sendo validadas pela api externa.
- 
-## Moedas disponiveis na API
-
- - `AED`: United Arab Emirates Dirham
-
- - `AFN`: Afghan Afghani
-
- - `ALL`: Albanian Lek
-
- - `AMD`: Armenian Dram
-
- - `ANG`: Netherlands Antillean Gulden
-
- - `AOA`: Angolan Kwanza
-
- - `ARS`: Argentine Peso
-
- - `AUD`: Australian Dollar
-
- - `AWG`: Aruban Florin
-
- - `AZN`: Azerbaijani Manat
-
- - `BAM`: Bosnia and Herzegovina Convertible Mark
-
- - `BBD`: Barbadian Dollar
-
- - `BDT`: Bangladeshi Taka
-
- - `BGN`: Bulgarian Lev
-
- - `BHD`: Bahraini Dinar
-
- - `BIF`: Burundian Franc
-
- - `BMD`: Bermudian Dollar
-
- - `BND`: Brunei Dollar
-
- - `BOB`: Bolivian Boliviano
-
- - `BRL`: Brazilian Real
-
- - `BSD`: Bahamian Dollar
-
- - `BTN`: Bhutanese Ngultrum
-
- - `BWP`: Botswana Pula
-
- - `BYN`: Belarusian Ruble
-
- - `BYR`: Belarusian Ruble
-
- - `BZD`: Belize Dollar
-
- - `CAD`: Canadian Dollar
-
- - `CDF`: Congolese Franc
-
- - `CHF`: Swiss Franc
-
- - `CLF`: Unidad de Fomento
-
- - `CLP`: Chilean Peso
-
- - `CNH`: Chinese Renminbi Yuan Offshore
-
- - `CNY`: Chinese Renminbi Yuan
-
- - `COP`: Colombian Peso
-
- - `CRC`: Costa Rican Colón
-
- - `CUC`: Cuban Convertible Peso
-
- - `CVE`: Cape Verdean Escudo
-
- - `CZK`: Czech Koruna
-
- - `DJF`: Djiboutian Franc
-
- - `DKK`: Danish Krone
-
- - `DOP`: Dominican Peso
-
- - `DZD`: Algerian Dinar
-
- - `EEK`: Estonian Kroon
-
- - `EGP`: Egyptian Pound
-
- - `ERN`: Eritrean Nakfa
-
- - `ETB`: Ethiopian Birr
-
- - `EUR`: Euro
-
- - `FJD`: Fijian Dollar
-
- - `FKP`: Falkland Pound
-
- - `GBP`: British Pound
-
- - `GEL`: Georgian Lari
-
- - `GGP`: Guernsey Pound
-
- - `GHS`: Ghanaian Cedi
-
- - `GIP`: Gibraltar Pound
-
- - `GMD`: Gambian Dalasi
-
- - `GNF`: Guinean Franc
- 
- - `GTQ`: Guatemalan Quetzal
- 
- - `GYD`: Guyanese Dollar
- 
- - `HKD`: Hong Kong Dollar
- 
- - `HNL`: Honduran Lempira
- 
- - `HRK`: Croatian Kuna
- 
- - `HTG`: Haitian Gourde
- 
- - `HUF`: Hungarian Forint
- 
- - `IDR`: Indonesian Rupiah
- 
- - `ILS`: Israeli New Sheqel
- 
- - `IMP`: Isle of Man Pound
- 
- - `INR`: Indian Rupee
- 
- - `IQD`: Iraqi Dinar
- 
- - `ISK`: Icelandic Króna
- 
- - `JEP`: Jersey Pound
- 
- - `JMD`: Jamaican Dollar
- 
- - `JOD`: Jordanian Dinar
- 
- - `JPY`: Japanese Yen
- 
- - `KES`: Kenyan Shilling
- 
- - `KGS`: Kyrgyzstani Som
- 
- - `KHR`: Cambodian Riel
- 
- - `KMF`: Comorian Franc
- 
- - `KRW`: South Korean Won
- 
- - `KWD`: Kuwaiti Dinar
- 
- - `KYD`: Cayman Islands Dollar
- 
- - `KZT`: Kazakhstani Tenge
- 
- - `LAK`: Lao Kip
- 
- - `LBP`: Lebanese Pound
- 
- - `LKR`: Sri Lankan Rupee
- 
- - `LRD`: Liberian Dollar
- 
- - `LSL`: Lesotho Loti
- 
- - `LTL`: Lithuanian Litas
- 
- - `LVL`: Latvian Lats
- 
- - `LYD`: Libyan Dinar
- 
- - `MAD`: Moroccan Dirham
- 
- - `MDL`: Moldovan Leu
- 
- - `MGA`: Malagasy Ariary
- 
- - `MKD`: Macedonian Denar
- 
- - `MMK`: Myanmar Kyat
- 
- - `MNT`: Mongolian Tögrög
- 
- - `MOP`: Macanese Pataca
- 
- - `MRO`: Mauritanian Ouguiya
- 
- - `MTL`: Maltese Lira
- 
- - `MUR`: Mauritian Rupee
- 
- - `MVR`: Maldivian Rufiyaa
- 
- - `MWK`: Malawian Kwacha
- 
- - `MXN`: Mexican Peso
- 
- - `MYR`: Malaysian Ringgit
- 
- - `MZN`: Mozambican Metical
- 
- - `NAD`: Namibian Dollar
- 
- - `NGN`: Nigerian Naira
- 
- - `NIO`: Nicaraguan Córdoba
- 
- - `NOK`: Norwegian Krone
- 
- - `NPR`: Nepalese Rupee
- 
- - `NZD`: New Zealand Dollar
- 
- - `OMR`: Omani Rial
- 
- - `PAB`: Panamanian Balboa
- 
- - `PEN`: Peruvian Sol
- 
- - `PGK`: Papua New Guinean Kina
- 
- - `PHP`: Philippine Peso
- 
- - `PKR`: Pakistani Rupee
- 
- - `PLN`: Polish Złoty
- 
- - `PYG`: Paraguayan Guaraní
- 
- - `QAR`: Qatari Riyal
- 
- - `RON`: Romanian Leu
- 
- - `RSD`: Serbian Dinar
- 
- - `RUB`: Russian Ruble
- 
- - `RWF`: Rwandan Franc
- 
- - `SAR`: Saudi Riyal
- 
- - `SBD`: Solomon Islands Dollar
- 
- - `SCR`: Seychellois Rupee
- 
- - `SEK`: Swedish Krona
- 
- - `SGD`: Singapore Dollar
- 
- - `SHP`: Saint Helenian Pound
- 
- - `SLL`: Sierra Leonean Leone
- 
- - `SOS`: Somali Shilling
- 
- - `SRD`: Surinomese Dollar
- 
- - `SSP`: South Sudanese Pound
- 
- - `STD`: São Tomé and Príncipe Dobra
- 
- - `SVC`: Salvadoran Colón
- 
- - `SZL`: Swazi Lilangeni
- 
- - `THB`: Thai Baht
- 
- - `TJS`: Tajikistani Somoni
- 
- - `TMT`: Turkmenistani Manat
- 
- - `TND`: Tunisian Dinar
- 
- - `TOP`: Tongan Paʻanga
- 
- - `TRY`: Turkish Lira
- 
- - `TTD`: Trinidad and Tobago Dollar
- 
- - `TWD`: New Taiwan Dollar
- 
- - `TZS`: Tanzanian Shilling
- 
- - `UAH`: Ukrainian Hryvnia
- 
- - `UGX`: Ugandan Shilling
- 
- - `USD`: US Dollar
- 
- - `UYU`: Uruguayan Peso
- 
- - `UZS`: Uzbekistan Som
- 
- - `VEF`: Venezuelan Bolívar
- 
- - `VES`: Venezuelan Bolívar Soberano
- 
- - `VND`: Vietnomese Đồng
- 
- - `VUV`: Vanuatu Vatu
- 
- - `WST`: Samoan Tala
- 
- - `XAF`: Central African Cfa Franc
- 
- - `XAG`: Silver (Troy Ounce)
- 
- - `XAU`: Gold (Troy Ounce)
- 
- - `XCD`: East Caribbean Dollar
- 
- - `XDR`: Special Drawing Rights
- 
- - `XOF`: West African Cfa Franc
- 
- - `XPD`: Palladium
- 
- - `XPF`: Cfp Franc
- 
- - `XPT`: Platinum
- 
- - `YER`: Yemeni Rial
- 
- - `ZAR`: South African Rand
- 
- - `ZMK`: Zambian Kwacha
- 
- - `ZMW`: Zambian Kwacha
- 
- - `ZWL`: Zimbabwean Dollar
  
